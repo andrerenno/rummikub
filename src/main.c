@@ -36,17 +36,30 @@ void fisher_yates(Tile* arr[]){        // Fisher Yates shuffle
 		tile_swap(arr[i], arr[randint]);
 	} 
 }
-void arr_get(Tile *hand[], Tile* arr[]){
+void pool_get(Tile *hand[], Tile* pool[]){
 
     Tile* voidTile;
+    voidTile = malloc(sizeof(Tile));
     voidTile -> number = 255;
     voidTile -> suit = 255;
 
     int i, j;
-    for (i = 0; arr[i] -> number == voidTile -> number; i++);
+    i = j = 0;
+    
+    /* Find the last tile on the hand (a void tile) */
     for (j = 0; hand[j] -> number != voidTile -> number; j++);
+
     (hand[j+1]) = voidTile;
-    tile_swap(hand[j], arr[i]);
+    tile_swap(hand[j], pool[i]);
+
+    /* pool[i] is now a void tile */
+    /* this next loop brings the void tile to the end of the pool */ 
+    while ((pool[i + 1] -> number) != (voidTile -> number)){
+        tile_swap(pool[i], pool [i+1]);
+        i++;
+    } 
+
+    free(pool[i+1]);
 }
 
 void arr_put(Tile* hand_tile, Tile* arr[]){
