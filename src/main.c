@@ -40,26 +40,39 @@ void fisher_yates(Tile* arr[]){        // Fisher Yates shuffle
 }
 void pool_get(Tile *hand[], Tile* pool[]){
 
-    int i, j;
-    i = j = 0;
+    int hand_pos, pool_pos;
+    hand_pos = pool_pos = 0;
 
-    /* Find the last element on the array  (a NULL pointer) */
-    for (j = 0; hand[j] != NULL; j++);
+    /* Find the last element on the hand array (a NULL pointer) */
+    for (hand_pos = 0; hand[hand_pos] != NULL; hand_pos++);
+    
+    /* Checks if the pool is empty */
+    if(pool[0] == NULL)
+        return;
 
-    hand[j+1] = NULL;
-    hand[j] = pool[i];
+    hand[hand_pos+1] = NULL;
+    hand[hand_pos] = pool[0];
 
     /* this next loop brings the tile that the player got to the end of the array (after the NULL pointer) */ 
-    while (pool[i-1] != NULL ){
-        pool[i] = pool[i + 1];
-        i++;
+    while (pool[pool_pos-1] != NULL ){
+        pool[pool_pos] = pool[pool_pos + 1];
+        pool_pos++;
     } 
 
 }
 
 void arr_put(Tile* hand[], unsigned int index, Tile* arr[]){
 
+    /* Test if 'index' is a valid position on the array */
+    int hand_size;
+    for (hand_size = 0; hand[hand_size] != NULL);
+
+    if (index > hand_size)
+        return;
+
+
     int i;
+
     for(i = 0; arr[i] != NULL; i++);
     arr[i + 1] = NULL;
     arr[i] = hand[index];
@@ -68,7 +81,6 @@ void arr_put(Tile* hand[], unsigned int index, Tile* arr[]){
         hand[index] = hand[index + 1];
         index++;
     } 
-
 
 }
 
