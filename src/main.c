@@ -73,89 +73,137 @@ int main(void){
     init_pair(4, COLOR_WHITE, COLOR_RED);		//Used for error messages.
     init_pair(5, COLOR_CYAN, COLOR_BLACK);		//Used for the X's that replace numbers that where already used. 
 
-    int num_of_players = 2;
+    int num_of_players = 2; //TODO make a menu to decide the number of players
 
     Tile** player[num_of_players];
     int has_first_melded[num_of_players];
+    int scores[num_of_players];
+
     for (int i = 0; i < num_of_players; i++){
-        player[i] = malloc(MAXHAND * sizeof(Tile));
-        player[i][0] = NULL;
-        has_first_melded[i] = 0;
+        scores[i] = 0;
     }
-    player[num_of_players] = NULL;
+    
 
+    while (true) {
 
-    Tile** pool = make_pool(0);
-
-    fisher_yates(pool);
-
-
-    /* The table will hold an array of sets, which are arrays of pointers to tiles */
-    Tile*** table = malloc(sizeof(Tile**) * NUMOFTILES);
-    table[0] = NULL;
-
-    for (int i = 0; i < 14; i++){
-        for (int j = 0; j < num_of_players; j++){
-            pool_get(player[j], pool);
+        for (int i = 0; i < num_of_players; i++){
+            player[i] = malloc(MAXHAND * sizeof(Tile));
+            player[i][0] = NULL;
+            has_first_melded[i] = 0;
         }
-    } 
-    
-    int maxrow, maxcol;
+        player[num_of_players] = NULL;
 
-    getmaxyx(stdscr, maxrow, maxcol);
+        Tile** pool = make_pool(0);
+        fisher_yates(pool);
 
-    int turn = 0; 
-    while (!empty_hand(player)) {
-        int current_player = turn % num_of_players;
 
-        clear();
-        
-        mvprintw(maxrow / 2 - 15, (maxcol - 8)/2, "Player %d", current_player + 1);
-        mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
-        getch();
-    
+        /* The table will hold an array of sets, which are arrays of pointers to tiles */
+        Tile*** table = malloc(sizeof(Tile**) * NUMOFTILES);
+        table[0] = NULL;
 
-        if (!(has_first_melded[current_player])){
-
-            int set_index;
-            for (set_index = 0; table[set_index] != NULL; set_index++);
-            table[set_index] = new_set();
-            table[set_index + 1] = NULL;
-
-            int result =  first_meld(player[current_player], table[set_index]);
-            if (result == 0){
-                has_first_melded[current_player] = 1;
+        for (int i = 0; i < 14; i++){
+            for (int j = 0; j < num_of_players; j++){
+                pool_get(player[j], pool);
             }
-            else if (result == 1) {
-                pool_get(player[current_player], pool);
-                free(table[set_index]);
-                table[set_index] = NULL;
+        } 
+
+        int maxrow, maxcol;
+
+        getmaxyx(stdscr, maxrow, maxcol);
+
+        int turn = 0; 
+        while (!empty_hand(player)) {
+            getmaxyx(stdscr, maxrow, maxcol);
+            int current_player = turn % num_of_players;
+
+            clear();
+
+            mvprintw(maxrow / 2 - 15, (maxcol - 8)/2, "Player %d", current_player + 1);
+            mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
+            getch();
+
+
+            if (!(has_first_melded[current_player])){
+
+                int set_index;
+                for (set_index = 0; table[set_index] != NULL; set_index++);
+                table[set_index] = new_set();
+                table[set_index + 1] = NULL;
+
+                int result =  first_meld(player[current_player], table[set_index]);
+                if (result == 0){
+                    has_first_melded[current_player] = 1;
+                }
+                else if (result == 1) {
+                    pool_get(player[current_player], pool);
+                    free(table[set_index]);
+                    table[set_index] = NULL;
+                }
+                else{ 
+                    clear();
+                    if (result == 2)
+                        mvprintw(maxrow / 2 - 15, (maxcol - 31)/2, "Invalid set! Three cards drawn.");
+                    if (result == 3)
+                        mvprintw(maxrow / 2 - 15, (maxcol - 68)/2, "Invalid first meld! (Cards have to add up to 30.) Three cards drawn.");
+
+                    pool_get(player[current_player], pool);
+                    pool_get(player[current_player], pool);
+                    pool_get(player[current_player], pool);
+
+                    free(table[set_index]);
+                    table[set_index] = NULL;
+
+                    mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
+                    getch();
+
+                }
             }
-            else{ 
-                clear();
-                if (result == 2)
+            else {
+                int result = reg_meld(player[current_player], table);
+                if (result == 1) {
+                    pool_get(player[current_player], pool);
+                }
+                else if (result == 2){ 
+                    clear();
                     mvprintw(maxrow / 2 - 15, (maxcol - 31)/2, "Invalid set! Three cards drawn.");
-                if (result == 3)
-                    mvprintw(maxrow / 2 - 15, (maxcol - 68)/2, "Invalid first meld! (Cards have to add up to 30.) Three cards drawn.");
 
-                pool_get(player[current_player], pool);
-                pool_get(player[current_player], pool);
-                pool_get(player[current_player], pool);
+                    pool_get(player[current_player], pool);
+                    pool_get(player[current_player], pool);
+                    pool_get(player[current_player], pool);
 
-                free(table[set_index]);
-                table[set_index] = NULL;
+                    mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
+                    getch();
+                }
 
-                mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
-                getch();
-                
+            }
+
+            turn++;
+        }
+
+        for (int i = 0; i < num_of_players; i++){
+            if (sum_tiles(player[i]) == 0){
+                for (int j = 0; j < num_of_players; j++)
+                    scores[i] += sum_tiles(player[j]);
+            }
+            else {
+                scores[i] -= sum_tiles(player[i]);
             }
         }
-        else {
-            reg_meld(player[current_player], table);
-        
+        clear();
+        mvprintw(maxrow/2 - 6, (maxcol - 6)/2, "Scores");
+        for (int i = 0; i < num_of_players; i++){
+            mvprintw(maxrow / 2 - 1, (maxcol - 2) - 10*i, "Player %d", i+1);
+            mvprintw(maxrow / 2, (maxcol - 2) - 10*i, "%d", scores[i]); 
         }
+        mvprintw(maxrow / 2 + 5, (maxcol - 51)/2, "Press <ENTER> to play again, anything else to quit.");
 
-        turn++;
+        int ch = getch();
+
+        if (ch == '\n')
+            continue;
+
+        else break;
+        
     }
     endwin();
 }
@@ -301,21 +349,21 @@ int check_table(Tile*** table){
 int check_run (Tile** run){
     int pos = 0;
     for (pos = 1; run[pos] != NULL; pos++){
-        if (run[pos] -> number == 14)
+        if (abs(run[pos] -> number) == 14)
             continue;
-        if (run[pos - 1] -> number == 14){
+        if (abs(run[pos - 1] -> number) == 14){
 
             if (pos == 1) {   // Joker is first element of the array.
                 continue;
             }
 
-            if (run[pos - 2] -> number == 14){ //There is another joker behind the first joker
+            if (abs(run[pos - 2] -> number == 14)){ //There is another joker behind the first joker
 
                 if (pos == 2){       // The two jokers are the first two elements of the array
                     continue;
                 }
 
-                else if (run[pos] -> number - 3 == run[pos - 3] -> number &&  run[pos] -> suit == run[pos - 3] -> suit){
+                else if (abs(run[pos] -> number) - 3 == abs(run[pos - 3] -> number) && run[pos] -> suit == run[pos - 3] -> suit){
                     continue;
                 }
 
@@ -323,14 +371,14 @@ int check_run (Tile** run){
 
             }
 
-            else if (run[pos] -> number - 2 == run[pos - 2] -> number && run[pos] -> suit == run[pos - 2] -> suit){ 
+            else if (abs(run[pos] -> number) - 2 == abs(run[pos - 2] -> number) && run[pos] -> suit == run[pos - 2] -> suit){ 
                 continue;
             }
 
             else return 0;
         }
-        else if (  (run[pos - 1] -> number) != (run[pos] -> number - 1)     // Numbers in a run must be consecutive.
-                ||    (run[pos] -> suit) != (run[pos - 1] -> suit)   ){  // Numbers in a run must have the same colour. 
+        else if (abs(run[pos - 1] -> number) != abs(run[pos] -> number) - 1     // Numbers in a run must be consecutive.
+                ||          (run[pos] -> suit) != (run[pos - 1] -> suit)   ){  // Numbers in a run must have the same colour. 
 
             return 0;
         }
@@ -354,15 +402,15 @@ int check_group (Tile** group){
         return 0;
     }
 
-    for (pos = 0; group[pos] -> number == 14; pos++); 
+    for (pos = 0; abs(group[pos] -> number) == 14; pos++); 
 
-    group_num = group[pos] -> number;
+    group_num = abs(group[pos] -> number);
 
     for (pos = 0; group[pos] != NULL; pos++){
-        if (group[pos] -> number == 14){
+        if (abs(group[pos] -> number) == 14){
             continue;
         }
-        if (group[pos] -> number != group_num){
+        if (abs(group[pos] -> number) != group_num){
             return 0;
         }
         for (int j = 0; j < pos; j++){
@@ -558,6 +606,19 @@ int reg_meld(Tile* hand[], Tile** table[]){
     int place = 0;
 
 
+    Tile*** table_cpy = malloc(sizeof(Tile**) * NUMOFTILES);
+
+    int cpy_set;
+    for (cpy_set = 0; table[cpy_set] != NULL; cpy_set++){
+        table_cpy[cpy_set] = new_set();
+        int j;
+        for (j = 0; table[cpy_set][j] != NULL; j++){
+            table_cpy[cpy_set][j] = table[cpy_set][j];
+        }
+        table_cpy[cpy_set][j] = NULL;
+    }
+    table_cpy[cpy_set] = NULL;
+
     do{
 
         getmaxyx(stdscr, maxrow, maxcol);
@@ -622,7 +683,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
         }
         else if (ch == KEY_DOWN)
             setpos = (setpos + 1) % table_size;
-        
+
         if (ch == KEY_UP && edit == 1){
             arr_put(table[setpos], curpos, table[setpos - 1 < 0 ? table_size - 1 : setpos - 1 ]);
             setpos = setpos - 1 < 0 ? table_size - 1 : setpos - 1;
@@ -663,7 +724,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
             int set_size;
             for (set_size = 0; set[set_size] != NULL; set_size++);
-            
+
             mvprintw(maxrow / 2 - 20 + 2*j,  (maxcol - set_size * 7 - 30)/2, "Set %d", j);
 
             for (int i = 0; set[i] != NULL; i++){
@@ -682,8 +743,41 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
     } while ((ch = getch()) != '\n');
 
-    return 0;
+    if (!check_table(table)){ 
+        for (int i = 0; table[i] != NULL; i++){
+            for (int j = 0; table[i][j] != NULL;){
+                if (table[i][j] -> number < 0){
+                    table[i][j] -> number *= -1;
+                    arr_put(table[i], j, hand);
+                }
+                else j++;
+
+            }
+            free(table[i]);
+            table[i] = table_cpy[i];
+        } 
+        return 2;
+    }
+    else {
+        int changes = 0;
+        for (int i = 0; table[i] != NULL; i++){
+            for (int j = 0; table[i][j] != NULL;j++){
+                if (table[i][j] -> number < 0){
+                    table[i][j] -> number *= -1;
+                    changes++;
+                }
+            }
+            free(table_cpy[i]);
+        } 
+
+        if (changes == 0)
+            return 1;
+
+        return 0;
+    }
+
 
 
 
 }
+
