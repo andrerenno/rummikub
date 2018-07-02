@@ -11,7 +11,7 @@
 
 
 typedef struct Tile {
-    unsigned char number;
+    char number;
     char suit;
 } Tile;
 
@@ -58,7 +58,7 @@ int reg_meld(Tile**, Tile***);
 
 /* ==================== Main ==================== */
 
-int main(int argc, char *argv[]){
+int main(void){
 
     /* curses initializations. */
     initscr();
@@ -255,7 +255,7 @@ void pool_get(Tile* hand[], Tile* pool[]){
 void arr_put(Tile* hand[], unsigned int index, Tile* arr[]){
 
     /* Test if 'index' is a valid position on the hand array */
-    int hand_size;
+    unsigned int hand_size;
 
     for (hand_size = 0; hand[hand_size] != NULL; hand_size++); //Note the semicolon. This just increment hand_size.
 
@@ -393,10 +393,14 @@ void move_and_edit(int ch, Tile* arr[], int* curpos, int* edit){
         (*curpos)--;
     }
 
-    if (ch == KEY_UP)
+    if (ch == 'e' && *edit == 0){
         *edit = 1;
-    if (ch == KEY_DOWN)
+        ch = 0;
+    }
+    if (ch == 'e' && *edit == 1){
         *edit = 0;
+        ch = 0;
+    }
 
     if (*curpos < 0)
         *curpos = handsize - 1;
@@ -555,6 +559,10 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
 
     do{
+
+        getmaxyx(stdscr, maxrow, maxcol);
+        clear();
+
         int table_size;
         for (table_size = 0; table[table_size] != NULL; table_size++);
 
@@ -568,29 +576,64 @@ int reg_meld(Tile* hand[], Tile** table[]){
             edit = 0;
         }
         if (ch == 'n'){
-            table[table_size] = new_set();
-            table[++table_size] = NULL;
+            int i;
+            for (i = 0; table[i] != NULL; i++){
+                if (table[i][0] == NULL){
+                    break;
+                }
+            }
+            if (table[i] != NULL){
+                mvprintw(2, (maxcol - 69)/2, "It looks like you already have an empty set. Try filling it up first.");
+            }
+            else{ 
+                table[table_size] = new_set();
+                table[++table_size] = NULL;
+            }
+
+        }
+        if (place == 0 && ch == ' '){
+            hand[curpos] -> number *= -1;
+            arr_put(hand, curpos, table[setpos]);
+            if (hand[0] == NULL){ 
+                place = 1;
+            }
+
+        }
+        else if (place == 1 && ch == ' '){
+            if (table[setpos][curpos] -> number < 0){ 
+                table[setpos][curpos] -> number *= -1;
+                arr_put(table[setpos], curpos, hand);
+            }
+            else 
+                mvprintw(2, (maxcol - 55)/2, "You can't take back a tile you didn't place this round.");
+
+            if (table[setpos][0] == NULL){ 
+                place = 0;
+            }
         }
 
-        if (ch == 'j' && edit == 1){
+
+        if (ch == KEY_DOWN && edit == 1){
             arr_put(table[setpos], curpos, table[(setpos + 1) % table_size]);
             setpos = (setpos + 1) % table_size;
+            for(curpos = 0; table[setpos][curpos] != NULL; curpos++);
+            curpos--;
 
         }
-        else if (ch == 'j')
+        else if (ch == KEY_DOWN)
             setpos = (setpos + 1) % table_size;
         
-        if (ch == 'k' && edit == 1){
+        if (ch == KEY_UP && edit == 1){
             arr_put(table[setpos], curpos, table[setpos - 1 < 0 ? table_size - 1 : setpos - 1 ]);
             setpos = setpos - 1 < 0 ? table_size - 1 : setpos - 1;
+            for(curpos = 0; table[setpos][curpos] != NULL; curpos++);
+            curpos--;
         }
-        else if (ch == 'k')
+        else if (ch == KEY_UP)
             setpos = setpos - 1 < 0 ? table_size - 1 : setpos - 1;
 
 
 
-        getmaxyx(stdscr, maxrow, maxcol);
-        clear();
 
         if (place == 0){
             move_and_edit(ch, hand, &curpos, &edit);
@@ -611,7 +654,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
                     move(maxrow - 2, (i * 7) + (maxcol - handsize * 7)/2);
                 attron(A_STANDOUT);
             }
-            printw("%X %c", hand[i] -> number, hand[i] -> suit);
+            printw("%X %c", abs(hand[i] -> number), hand[i] -> suit);
             attroff(A_STANDOUT);
         }
 
@@ -625,12 +668,12 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
             for (int i = 0; set[i] != NULL; i++){
                 move(maxrow / 2 - 20 + 2*j, (i * 7) + (maxcol - set_size * 7)/2);
-                if (curpos == i && place == 1){ 
+                if (curpos == i && place == 1 && setpos == j){ 
                     if (edit == 1)
                         move(maxrow / 2 - 20 + 2 * j - 1 , (i * 7) + (maxcol - set_size * 7)/2);
                     attron(A_STANDOUT);
                 }
-                printw("%X %c", set[i] -> number, set[i] -> suit);
+                printw("%X %c", abs(set[i] -> number), set[i] -> suit);
                 attroff(A_STANDOUT);
             }
         }
