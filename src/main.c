@@ -49,14 +49,19 @@ Tile** new_set(void);
 /* Creates a new pool and adds all the tiles to it, then returns it*/
 Tile** make_pool(int);
 
+/* Handles the movement of the cursor in places where the order can be changed */
 void move_and_edit(int, Tile**, int*, int*);
 
-int first_meld(Tile**, Tile**);
-
+/* Returns the sum of the numbers in an array of tiles */
 int sum_tiles(Tile**);
 
+/* Returns 0 if no hands are empty, returns a value different than zero if there is an empty hand */
 int empty_hand (Tile***);
 
+/* In the initial meld, the player cannot use other player's tiles, and the sum of the values of the tiles must be at least 30 */
+int first_meld(Tile**, Tile**);
+
+/* Regular "meld", like the first_meld function but the player can interact with other sets and has no limit on the sum of the values*/
 int reg_meld(Tile**, Tile***);
 
 /* ==================== Main ==================== */
@@ -637,6 +642,16 @@ int first_meld(Tile* hand[], Tile* set[]){
 
         for(int i = 0; hand[i] != NULL; i++){
             move(maxrow - 6, (i * 5) + (maxcol - handsize * 5)/2);
+
+            if (hand[i] -> suit == '#')
+                attron(COLOR_PAIR(POUND));
+            if (hand[i] -> suit == '!')
+                attron(COLOR_PAIR(BANG));
+            if (hand[i] -> suit == '@')
+                attron(COLOR_PAIR(AT));
+            if (hand[i] -> suit == '$')
+                attron(COLOR_PAIR(DOLLAR));
+
             if (curpos == i && place == 0){ 
                 if (edit == 1)
                     move(maxrow - 7, (i * 5) + (maxcol - handsize * 5)/2);
@@ -649,6 +664,10 @@ int first_meld(Tile* hand[], Tile* set[]){
                 printw("%X%c", hand[i] -> number, hand[i] -> suit);
 
             attroff(A_STANDOUT);
+            attroff(COLOR_PAIR(POUND));
+            attroff(COLOR_PAIR(BANG));
+            attroff(COLOR_PAIR(AT));
+            attroff(COLOR_PAIR(DOLLAR));
         }
 
         int set_size;
@@ -661,6 +680,16 @@ int first_meld(Tile* hand[], Tile* set[]){
                     move(maxrow / 2 - 1 , (i * 5) + (maxcol - set_size * 5)/2);
                 attron(A_STANDOUT);
             }
+
+            if (set[i] -> suit == '#')
+                attron(COLOR_PAIR(POUND));
+            if (set[i] -> suit == '!')
+                attron(COLOR_PAIR(BANG));
+            if (set[i] -> suit == '@')
+                attron(COLOR_PAIR(AT));
+            if (set[i] -> suit == '$')
+                attron(COLOR_PAIR(DOLLAR));
+
             if (set[i] -> number == 14)
                 printw("**");
 
@@ -668,6 +697,10 @@ int first_meld(Tile* hand[], Tile* set[]){
                 printw("%X%c", set[i] -> number, set[i] -> suit);
 
             attroff(A_STANDOUT);
+            attroff(COLOR_PAIR(POUND));
+            attroff(COLOR_PAIR(BANG));
+            attroff(COLOR_PAIR(AT));
+            attroff(COLOR_PAIR(DOLLAR));
         }
 
         refresh();
@@ -804,6 +837,16 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
         for(int i = 0; hand[i] != NULL; i++){
             move(maxrow - 6, (i * 5) + (maxcol - handsize * 5)/2);
+
+            if (hand[i] -> suit == '#')
+                attron(COLOR_PAIR(POUND));
+            if (hand[i] -> suit == '!')
+                attron(COLOR_PAIR(BANG));
+            if (hand[i] -> suit == '@')
+                attron(COLOR_PAIR(AT));
+            if (hand[i] -> suit == '$')
+                attron(COLOR_PAIR(DOLLAR));
+
             if (curpos == i && place == 0){ 
                 if (edit == 1)
                     move(maxrow - 7, (i * 5) + (maxcol - handsize * 5)/2);
@@ -815,6 +858,10 @@ int reg_meld(Tile* hand[], Tile** table[]){
                 printw("%X%c", abs(hand[i] -> number), hand[i] -> suit);
 
             attroff(A_STANDOUT);
+            attroff(COLOR_PAIR(POUND));
+            attroff(COLOR_PAIR(BANG));
+            attroff(COLOR_PAIR(AT));
+            attroff(COLOR_PAIR(DOLLAR));
         }
 
         for (int j = 0; table[j] != NULL; j++){
@@ -827,6 +874,16 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
             for (int i = 0; set[i] != NULL; i++){
                 move(maxrow / 2 - 20 + 2*j, (i * 5) + (maxcol - set_size * 5)/2);
+
+                if (set[i] -> suit == '#')
+                    attron(COLOR_PAIR(POUND));
+                if (set[i] -> suit == '!')
+                    attron(COLOR_PAIR(BANG));
+                if (set[i] -> suit == '@')
+                    attron(COLOR_PAIR(AT));
+                if (set[i] -> suit == '$')
+                attron(COLOR_PAIR(DOLLAR));
+
                 if (curpos == i && place == 1 && setpos == j){ 
                     if (edit == 1)
                         move(maxrow / 2 - 20 + 2 * j - 1 , (i * 5) + (maxcol - set_size * 5)/2);
@@ -837,6 +894,10 @@ int reg_meld(Tile* hand[], Tile** table[]){
                 else
                     printw("%X%c", abs(set[i] -> number), set[i] -> suit);
                 attroff(A_STANDOUT);
+                attroff(COLOR_PAIR(POUND));
+                attroff(COLOR_PAIR(BANG));
+                attroff(COLOR_PAIR(AT));
+                attroff(COLOR_PAIR(DOLLAR));
             }
         }
 
