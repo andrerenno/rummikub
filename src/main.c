@@ -248,13 +248,16 @@ int main(void){
         }
         clear();
         mvprintw(maxrow/2 - 6, (maxcol - 6)/2, "Scores");
+
         for (int i = 0; i < num_of_players; i++){
-            mvprintw(maxrow / 2 - 1, (maxcol - 2) - 10*i, "Player %d", i+1);
-            mvprintw(maxrow / 2, (maxcol - 2) - 10*i, "%d", scores[i]); 
+            mvprintw(maxrow / 2 + i, (maxcol - 16)/2, "Player %d:", i+1);
+            printw("     %d", scores[i]); 
         }
+
         mvprintw(maxrow / 2 + 5, (maxcol - 51)/2, "Press <ENTER> to play again, anything else to quit.");
 
         int ch = getch();
+
         for (int i = 0; pool[i] != NULL; i++)
             free(pool[i]);
 
@@ -573,7 +576,7 @@ int sum_tiles(Tile* set[]){
         return sum;
     }
 
-    if (check_run(set)){
+    else if (check_run(set)){
         int pos;
         for (pos = 0; set[pos] -> number == 14; pos++); 
         int run_num = set[pos] -> number - pos;
@@ -584,7 +587,17 @@ int sum_tiles(Tile* set[]){
         return sum;
     }
 
-    return 0;
+    else { 
+        int pos;
+        for (pos = 0; set[pos] != NULL; pos++){
+            if (set[pos] -> number == 14)
+                sum += 30;
+            else sum += set[pos] -> number;
+        }
+        
+        return sum;
+    
+    }
 
 }
 
