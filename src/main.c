@@ -1,10 +1,13 @@
 
-/* TODO C# D# ** is accepted as a valid run, why? */
-
 #include <stdlib.h>
 #include <stdio.h>
-#include <curses.h>
+#include <ncurses.h>
 #include <time.h>
+
+#define POUND 1
+#define BANG 2
+#define AT 3
+#define DOLLAR 4
 
 #define MAXHAND 106
 #define NUMOFTILES 106
@@ -67,13 +70,62 @@ int main(void){
     nodelay(stdscr, FALSE);
     curs_set(0);
     start_color();
-    init_pair(1, COLOR_MAGENTA, COLOR_BLACK);	//Used for the "Quarto" in the title screen.
-    init_pair(2, COLOR_BLUE, COLOR_BLACK);  	//Used for player 1's turn.
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);		//Used for player 2's turn.
-    init_pair(4, COLOR_WHITE, COLOR_RED);		//Used for error messages.
-    init_pair(5, COLOR_CYAN, COLOR_BLACK);		//Used for the X's that replace numbers that where already used. 
+    init_pair(POUND, COLOR_BLUE, COLOR_BLACK);  
+    init_pair(BANG, COLOR_GREEN, COLOR_BLACK);
+    init_pair(AT, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(DOLLAR, COLOR_RED, COLOR_BLACK);
+    init_pair(9, COLOR_WHITE, COLOR_RED);		//Used for error messages.
 
-    int num_of_players = 2; //TODO make a menu to decide the number of players
+    int poolmode = 0; 
+    int maxrow, maxcol;
+    getmaxyx(stdscr, maxrow, maxcol);
+
+    /* Ascii art taken from http://patorjk.com/software/taag/ */
+    mvprintw((maxrow - 6) / 2 - 12, (maxcol - 134) / 2," .----------------. .----------------. .----------------. .----------------. .----------------. .----------------. .----------------. ");
+    mvprintw((maxrow - 6) / 2 - 11, (maxcol - 134) / 2,"| .--------------. | .--------------. | .--------------. | .--------------. | .--------------. | .--------------. | .--------------. |");
+    mvprintw((maxrow - 6) / 2 - 10, (maxcol - 134) / 2,"| |      __      | | |  ________    | | |    ______    | | |   _______    | | |  ___  ____   | | | _____  _____ | | |   ______     | |");
+    mvprintw((maxrow - 6) / 2 - 9, (maxcol - 134) / 2,"| |     /  \\     | | | |_   ___ `.  | | |   / ____ `.  | | |  |  _____|   | | | |_  ||_  _|  | | ||_   _||_   _|| | |  |_   _ \\    | |");
+    mvprintw((maxrow - 6) / 2 - 8, (maxcol - 134) / 2,"| |    / /\\ \\    | | |   | |   `. \\ | | |   `'  __) |  | | |  | |____     | | |   | |_/ /    | | |  | |    | |  | | |    | |_) |   | |");
+    mvprintw((maxrow - 6) / 2 - 7, (maxcol - 134) / 2,"| |   / ____ \\   | | |   | |    | | | | |   _  |__ '.  | | |  '_.____''.  | | |   |  __'.    | | |  | '    ' |  | | |    |  __'.   | |");
+    mvprintw((maxrow - 6) / 2 - 6, (maxcol - 134) / 2,"| | _/ /    \\ \\_ | | |  _| |___.' / | | |  | \\____) |  | | |  | \\____) |  | | |  _| |  \\ \\_  | | |   \\ `--' /   | | |   _| |__) |  | |");
+    mvprintw((maxrow - 6) / 2 - 5, (maxcol - 134) / 2,"| ||____|  |____|| | | |________.'  | | |   \\______.'  | | |   \\______.'  | | | |____||____| | | |    `.__.'    | | |  |_______/   | |");
+    mvprintw((maxrow - 6) / 2 - 4, (maxcol - 134) / 2,"| |              | | |              | | |              | | |              | | |              | | |              | | |              | |");
+    mvprintw((maxrow - 6) / 2 - 3, (maxcol - 134) / 2,"| '--------------' | '--------------' | '--------------' | '--------------' | '--------------' | '--------------' | '--------------' |");
+    mvprintw((maxrow - 6) / 2 - 2, (maxcol - 134) / 2," '----------------' '----------------' '----------------' '----------------' '----------------' '----------------' '----------------' ");
+
+    mvprintw(maxrow / 2, maxcol / 2 - 25, "NUMBER OF PLAYERS:");
+    int curpos = 0;
+    int ch = 0;
+
+    do { 
+        if (ch == KEY_UP)
+            curpos--;	
+        else if (ch == KEY_DOWN)
+            curpos++;
+
+        if (ch == KEY_RIGHT || ch == KEY_LEFT)
+            poolmode = poolmode == 1 ? 0 : 1;
+
+        if (curpos < 0) 
+            curpos = 2;
+
+        if (curpos > 2) 
+            curpos = 0;
+
+        for (int i = 0; i < 3; i++){
+            if (curpos == i)
+                attron(A_STANDOUT);
+            mvprintw(maxrow / 2 + 3 * (i+1), (maxcol - 9) / 2 , "%d Players", i + 2);
+            attroff(A_STANDOUT);
+        }
+
+        attron(A_STANDOUT);
+        mvprintw(maxrow - 2, (maxcol)/2 - 14 , "<  MODE: %s", poolmode == 0 ? "RANDOM POOL      >" : "baralho.txt FILE >");
+        attroff(A_STANDOUT);
+    } while ((ch = getch()) != '\n');
+
+    int num_of_players = curpos + 2; 
+
 
     Tile** player[num_of_players];
     int has_first_melded[num_of_players];
@@ -82,7 +134,7 @@ int main(void){
     for (int i = 0; i < num_of_players; i++){
         scores[i] = 0;
     }
-    
+
 
     while (true) {
 
@@ -93,21 +145,18 @@ int main(void){
         }
         player[num_of_players] = NULL;
 
-        Tile** pool = make_pool(0);
-        fisher_yates(pool);
+        Tile** pool = make_pool(poolmode);
 
 
         /* The table will hold an array of sets, which are arrays of pointers to tiles */
         Tile*** table = malloc(sizeof(Tile**) * NUMOFTILES);
         table[0] = NULL;
 
-        for (int i = 0; i < 14; i++){
-            for (int j = 0; j < num_of_players; j++){
+        for (int j = 0; j < num_of_players; j++){
+            for (int i = 0; i < 14; i++){
                 pool_get(player[j], pool);
-            }
-        } 
-
-        int maxrow, maxcol;
+            } 
+        }
 
         getmaxyx(stdscr, maxrow, maxcol);
 
@@ -118,7 +167,7 @@ int main(void){
 
             clear();
 
-            mvprintw(maxrow / 2 - 15, (maxcol - 8)/2, "Player %d", current_player + 1);
+            mvprintw(maxrow / 2 - 15, (maxcol - 15)/2, "Player %d's turn", current_player + 1);
             mvprintw(maxrow / 2, (maxcol - 28)/2, "Press any button to continue");
             getch();
 
@@ -203,7 +252,7 @@ int main(void){
             continue;
 
         else break;
-        
+
     }
     endwin();
 }
@@ -270,6 +319,37 @@ Tile** make_pool(int mode){
         pool[NUMOFTILES - 2] -> suit = '*';
 
         pool[NUMOFTILES] = NULL;
+
+        fisher_yates(pool);
+    }
+    if (mode == 1) {
+
+        FILE *fp;
+
+        char charN[2]; //le o numero
+        char charS[2]; //le o naipe
+        char enter[2]; //le o \n
+
+        fp = fopen("baralho.txt", "r");
+
+        for (int i = 0; i < NUMOFTILES; i++)
+        {
+            fgets(charN, sizeof(charN), fp);
+            fgets(charS, sizeof(charS), fp);
+            fgets(enter, sizeof(enter), fp);
+
+            pool[i] = malloc(sizeof(Tile));
+
+            if (charN[0] == '*')
+                pool[i] -> number = 14;
+            else if (charN[0] - '0' < 10)
+                pool[i] -> number = charN[0] - '0';
+            else 
+                pool[i] -> number = charN[0] - 'A' + 10;
+            pool[i] -> suit = charS[0];
+        }
+
+        fclose(fp);
     }
 
     return pool;
@@ -348,6 +428,10 @@ int check_table(Tile*** table){
 
 int check_run (Tile** run){
     int pos = 0;
+    for (pos = 0; run[pos] != NULL; pos++);
+    if (pos < 2)
+        return 0;
+
     for (pos = 1; run[pos] != NULL; pos++){
         if (abs(run[pos] -> number) == 14)
             continue;
@@ -457,6 +541,45 @@ void move_and_edit(int ch, Tile* arr[], int* curpos, int* edit){
 
 }
 
+int sum_tiles(Tile* set[]){
+    int sum = 0; 
+    if (check_group(set)){
+        int pos;
+        for (pos = 0; set[pos] -> number == 14; pos++); 
+        int group_num = set[pos] -> number;
+
+        for (pos = 0; set[pos] != NULL; pos++){
+            sum += group_num;
+        }
+        return sum;
+    }
+
+    if (check_run(set)){
+        int pos;
+        for (pos = 0; set[pos] -> number == 14; pos++); 
+        int run_num = set[pos] -> number - pos;
+
+        for (pos = 0; set[pos] != NULL; pos++){
+            sum += run_num + pos;
+        }
+        return sum;
+    }
+
+    return 0;
+
+}
+
+int empty_hand (Tile*** player){
+
+    for (int i = 0; player[i] != NULL; i++){
+        if (player[i][0] == NULL)
+            return (i + 1);
+    }
+
+    return 0;
+
+}
+
 int first_meld(Tile* hand[], Tile* set[]){
 
     int maxrow, maxcol;
@@ -513,13 +636,18 @@ int first_meld(Tile* hand[], Tile* set[]){
 
 
         for(int i = 0; hand[i] != NULL; i++){
-            move(maxrow - 1, (i * 7) + (maxcol - handsize * 7)/2);
+            move(maxrow - 6, (i * 5) + (maxcol - handsize * 5)/2);
             if (curpos == i && place == 0){ 
                 if (edit == 1)
-                    move(maxrow - 2, (i * 7) + (maxcol - handsize * 7)/2);
+                    move(maxrow - 7, (i * 5) + (maxcol - handsize * 5)/2);
                 attron(A_STANDOUT);
             }
-            printw("%X %c", hand[i] -> number, hand[i] -> suit);
+            if (hand[i] -> number == 14)
+                printw("**");
+
+            else
+                printw("%X%c", hand[i] -> number, hand[i] -> suit);
+
             attroff(A_STANDOUT);
         }
 
@@ -527,13 +655,18 @@ int first_meld(Tile* hand[], Tile* set[]){
         for (set_size = 0; set[set_size] != NULL; set_size++);
 
         for (int i = 0; set[i] != NULL; i++){
-            move(maxrow / 2, (i * 7) + (maxcol - set_size * 7)/2);
+            move(maxrow / 2, (i * 5) + (maxcol - set_size * 5)/2);
             if (curpos == i && place == 1){ 
                 if (edit == 1)
-                    move(maxrow / 2 - 1 , (i * 7) + (maxcol - set_size * 7)/2);
+                    move(maxrow / 2 - 1 , (i * 5) + (maxcol - set_size * 5)/2);
                 attron(A_STANDOUT);
             }
-            printw("%X %c", set[i] -> number, set[i] -> suit);
+            if (set[i] -> number == 14)
+                printw("**");
+
+            else
+                printw("%X%c", set[i] -> number, set[i] -> suit);
+
             attroff(A_STANDOUT);
         }
 
@@ -553,45 +686,6 @@ int first_meld(Tile* hand[], Tile* set[]){
     if (sum_tiles(set) < 30)
         return 3;
 
-
-    return 0;
-
-}
-
-int sum_tiles(Tile* set[]){
-    int sum = 0; 
-    if (check_group(set)){
-        int pos;
-        for (pos = 0; set[pos] -> number == 14; pos++); 
-        int group_num = set[pos] -> number;
-
-        for (pos = 0; set[pos] != NULL; pos++){
-            sum += group_num;
-        }
-        return sum;
-    }
-
-    if (check_run(set)){
-        int pos;
-        for (pos = 0; set[pos] -> number == 14; pos++); 
-        int run_num = set[pos] -> number - pos;
-
-        for (pos = 0; set[pos] != NULL; pos++){
-            sum += run_num + pos;
-        }
-        return sum;
-    }
-
-    return 0;
-
-}
-
-int empty_hand (Tile*** player){
-
-    for (int i = 0; player[i] != NULL; i++){
-        if (player[i][0] == NULL)
-            return (i + 1);
-    }
 
     return 0;
 
@@ -709,13 +803,17 @@ int reg_meld(Tile* hand[], Tile** table[]){
 
 
         for(int i = 0; hand[i] != NULL; i++){
-            move(maxrow - 1, (i * 7) + (maxcol - handsize * 7)/2);
+            move(maxrow - 6, (i * 5) + (maxcol - handsize * 5)/2);
             if (curpos == i && place == 0){ 
                 if (edit == 1)
-                    move(maxrow - 2, (i * 7) + (maxcol - handsize * 7)/2);
+                    move(maxrow - 7, (i * 5) + (maxcol - handsize * 5)/2);
                 attron(A_STANDOUT);
             }
-            printw("%X %c", abs(hand[i] -> number), hand[i] -> suit);
+            if (abs(hand[i] -> number) == 14)
+                printw("**");
+            else
+                printw("%X%c", abs(hand[i] -> number), hand[i] -> suit);
+
             attroff(A_STANDOUT);
         }
 
@@ -725,16 +823,19 @@ int reg_meld(Tile* hand[], Tile** table[]){
             int set_size;
             for (set_size = 0; set[set_size] != NULL; set_size++);
 
-            mvprintw(maxrow / 2 - 20 + 2*j,  (maxcol - set_size * 7 - 30)/2, "Set %d", j);
+            mvprintw(maxrow / 2 - 20 + 2*j,  (maxcol - set_size * 5 - 30)/2, "Set %d", j);
 
             for (int i = 0; set[i] != NULL; i++){
-                move(maxrow / 2 - 20 + 2*j, (i * 7) + (maxcol - set_size * 7)/2);
+                move(maxrow / 2 - 20 + 2*j, (i * 5) + (maxcol - set_size * 5)/2);
                 if (curpos == i && place == 1 && setpos == j){ 
                     if (edit == 1)
-                        move(maxrow / 2 - 20 + 2 * j - 1 , (i * 7) + (maxcol - set_size * 7)/2);
+                        move(maxrow / 2 - 20 + 2 * j - 1 , (i * 5) + (maxcol - set_size * 5)/2);
                     attron(A_STANDOUT);
                 }
-                printw("%X %c", abs(set[i] -> number), set[i] -> suit);
+                if (abs(set[i] -> number) == 14)
+                    printw("* *");
+                else
+                    printw("%X%c", abs(set[i] -> number), set[i] -> suit);
                 attroff(A_STANDOUT);
             }
         }
