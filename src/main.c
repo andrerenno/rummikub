@@ -107,12 +107,12 @@ int main(void){
             poolmode = poolmode == 1 ? 0 : 1;
 
         if (curpos < 0) 
-            curpos = 2;
+            curpos = 3;
 
-        if (curpos > 2) 
+        if (curpos > 3) 
             curpos = 0;
 
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 4; i++){
             if (curpos == i)
                 attron(A_STANDOUT);
             mvprintw(maxrow / 2 + 3 * (i+1), (maxcol - 9) / 2 , "%d Players", i + 2);
