@@ -703,6 +703,25 @@ int first_meld(Tile* hand[], Tile* set[]){
             attroff(COLOR_PAIR(DOLLAR));
         }
 
+        move(maxrow - 3, (maxcol - 74) / 2);
+        attron(A_STANDOUT);
+        printw("Press <ENTER> to end your turn");
+        attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Use the keyboard arrows to move the cursor");
+        attroff(A_STANDOUT);
+
+        move(maxrow - 1, (maxcol - 132) / 2);
+        attron(A_STANDOUT);
+        printw("Press <e> to toggle moving a piece within the table or hand");
+        attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Press <SPACE> to move the selected piece between the table and your hand");
+        attroff(A_STANDOUT);
+
+
         refresh();
 
     } while ((ch = getch()) != '\n');
@@ -793,7 +812,9 @@ int reg_meld(Tile* hand[], Tile** table[]){
                 arr_put(table[setpos], curpos, hand);
             }
             else 
+                attron(COLOR_PAIR(9));
                 mvprintw(2, (maxcol - 55)/2, "You can't take back a tile you didn't place this round.");
+                attroff(COLOR_PAIR(9));
 
             if (table[setpos][0] == NULL){ 
                 place = 0;
@@ -900,6 +921,31 @@ int reg_meld(Tile* hand[], Tile** table[]){
                 attroff(COLOR_PAIR(DOLLAR));
             }
         }
+
+        move(maxrow - 3, (maxcol - 74) / 2);
+        attron(A_STANDOUT);
+        printw("Press <ENTER> to end your turn");
+        attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Use the keyboard arrows to move the cursor");
+        attroff(A_STANDOUT);
+
+        move(maxrow - 1, (maxcol - 162) / 2);
+        attron(A_STANDOUT);
+        printw("Press <e> to toggle moving a piece within the table or hand");
+        attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Press <SPACE> to move the selected piece between the table and your hand");
+        attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Press <n> to create a new set");
+        attroff(A_STANDOUT);
+
+
+        
 
         refresh();
 
