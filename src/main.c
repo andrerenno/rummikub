@@ -131,6 +131,10 @@ int main(void){
 
     int num_of_players = curpos + 2; 
 
+    Tile** pool = NULL;
+
+    /* The table will hold an array of sets, which are arrays of pointers to tiles */
+    Tile*** table;
 
     Tile** player[num_of_players];
     int has_first_melded[num_of_players];
@@ -150,11 +154,10 @@ int main(void){
         }
         player[num_of_players] = NULL;
 
-        Tile** pool = make_pool(poolmode);
+        pool = make_pool(poolmode);
 
 
-        /* The table will hold an array of sets, which are arrays of pointers to tiles */
-        Tile*** table = malloc(sizeof(Tile**) * NUMOFTILES);
+        table = malloc(sizeof(Tile**) * NUMOFTILES);
         table[0] = NULL;
 
         for (int j = 0; j < num_of_players; j++){
@@ -252,6 +255,17 @@ int main(void){
         mvprintw(maxrow / 2 + 5, (maxcol - 51)/2, "Press <ENTER> to play again, anything else to quit.");
 
         int ch = getch();
+        for (int i = 0; pool[i] != NULL; i++)
+            free(pool[i]);
+
+        for (int i = 0; i < num_of_players; i++)
+            for (int j = 0; player[i][j] != NULL; j++) 
+                free(player[i][j]);
+
+        for (int i = 0; table[i] != NULL; i++)
+            for (int j = 0; table[i][j] != NULL; j++)
+                free(table[i][j]);
+
 
         if (ch == '\n')
             continue;
@@ -703,7 +717,7 @@ int first_meld(Tile* hand[], Tile* set[]){
             attroff(COLOR_PAIR(DOLLAR));
         }
 
-        move(maxrow - 3, (maxcol - 74) / 2);
+        move(maxrow - 3, (maxcol - 121) / 2);
         attron(A_STANDOUT);
         printw("Press <ENTER> to end your turn");
         attroff(A_STANDOUT);
@@ -711,6 +725,12 @@ int first_meld(Tile* hand[], Tile* set[]){
         attron(A_STANDOUT);
         printw("Use the keyboard arrows to move the cursor");
         attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Press <t> and <h> to move to <t>able and to <h>and");
+        attroff(A_STANDOUT);
+
+
 
         move(maxrow - 1, (maxcol - 132) / 2);
         attron(A_STANDOUT);
@@ -813,8 +833,8 @@ int reg_meld(Tile* hand[], Tile** table[]){
             }
             else 
                 attron(COLOR_PAIR(9));
-                mvprintw(2, (maxcol - 55)/2, "You can't take back a tile you didn't place this round.");
-                attroff(COLOR_PAIR(9));
+            mvprintw(2, (maxcol - 55)/2, "You can't take back a tile you didn't place this round.");
+            attroff(COLOR_PAIR(9));
 
             if (table[setpos][0] == NULL){ 
                 place = 0;
@@ -903,7 +923,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
                 if (set[i] -> suit == '@')
                     attron(COLOR_PAIR(AT));
                 if (set[i] -> suit == '$')
-                attron(COLOR_PAIR(DOLLAR));
+                    attron(COLOR_PAIR(DOLLAR));
 
                 if (curpos == i && place == 1 && setpos == j){ 
                     if (edit == 1)
@@ -922,7 +942,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
             }
         }
 
-        move(maxrow - 3, (maxcol - 74) / 2);
+        move(maxrow - 3, (maxcol - 140) / 2);
         attron(A_STANDOUT);
         printw("Press <ENTER> to end your turn");
         attroff(A_STANDOUT);
@@ -930,6 +950,11 @@ int reg_meld(Tile* hand[], Tile** table[]){
         attron(A_STANDOUT);
         printw("Use the keyboard arrows to move the cursor");
         attroff(A_STANDOUT);
+        printw(" ");
+        attron(A_STANDOUT);
+        printw("Press <t> and <h> to move to the <t>able or to the <h>and");
+        attroff(A_STANDOUT);
+
 
         move(maxrow - 1, (maxcol - 162) / 2);
         attron(A_STANDOUT);
@@ -945,7 +970,7 @@ int reg_meld(Tile* hand[], Tile** table[]){
         attroff(A_STANDOUT);
 
 
-        
+
 
         refresh();
 
